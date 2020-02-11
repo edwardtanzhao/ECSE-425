@@ -32,6 +32,15 @@ architecture arch of cache is
 -- declare signals here
 
 	--address struct: 25 bits tag, 5 bits index, 2 bits offset
+	--the states we have to consider are
+	--1. just starting the cache
+	--2. reading from cache
+	--3. writing to cache
+	--4. read from memory
+	--5. write to memory
+	--6. write from memory
+	--7. waiting for response from memory
+
 	type state_type is (start, r, w, r_memread, r_memwrite, r_memwait, w_memwrite);
 	signal current_state : state_type;
 	signal next_state : state_type; 
@@ -50,10 +59,10 @@ begin
 		begin
 		--if reset signal was sent, tell FSM to go back to start
 			if reset = '1' then
-				state <= start;
+				current_state <= start;
 		--if clock signal is 1 and just recently changed to 1
 			elsif (clock = '1' and clock'event) then
-				state <= next_state;
+				current_state <= next_state;
 			end if;
 	end process
 
@@ -61,6 +70,35 @@ begin
 	process (s_read, s_write, m_waitrequest, state)
 
 		begin
+		--creating a skeleton for the states that we have to consider
+			case current_state is
+	
+				when start => 
+					--if we are not reading or writing anything, send back a s_waitrequest
+					s_waitrequest <= '1';	
+					--now check if we need to read or write;
+					if s_read = '1' then
+						next_state <= r;
+					elsif s_write = '1' then
+						next_state <= w;
+					else 
+						next_state <= start;		
+					end if;
+				
+				when r => ;
+	
+				when w => ;
+			
+				when r_memread => ;
+			
+				when r_memwrite => ;
+	
+				when r_memwait -> ;
+	
+				when w_memwrite => ;
+	
+			end case;
+			
 
 		end process;
 
