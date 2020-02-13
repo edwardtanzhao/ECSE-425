@@ -48,7 +48,7 @@ architecture arch of cache is
 	--Cache: 1 bit for valid, 1 bit for dirty, 25 bits for tag, 128 bit blocks (data) 
 	--4096/128 = 32
 	type cache_type is array (0 to 31) of std_logic_vector (154 downto 0);
-	signal cache2 : cache_type;
+	signal cache1 : cache_type;
 
 begin
 
@@ -69,7 +69,20 @@ begin
 	--process to know when to read, write, evict or overwrite, the main FSM
 	process (s_read, s_write, m_waitrequest, state)
 
+		--variable for the tag, index, and offset to check for hit
+		--variable for the addr that is needed for the read or write
+		--the s_addr at input is split into three parts: tag (25 bits), index (5 bits), offset (2 bits)
+		--index is integer to use in cache
+		variable index : INTEGER;
+		variable offset : INTEGER;
+		variable tag : std_logic_vector (24 downto 0);
+
 		begin
+
+		index := to_integer(unsigned(s_addr(6 downto 2)));
+		offset := to_integer(unsigned(s_addr(1 downto 0)));
+		tag := s_addr(31 downto 7);
+
 		--creating a skeleton for the states that we have to consider
 			case current_state is
 	
@@ -85,7 +98,17 @@ begin
 						next_state <= start;		
 					end if;
 				
-				when r => ;
+				when r => 
+					--check to make sure data is there and valid
+					if cache1(index)(154) = '1' and cache1(index)(152 downto 128) = tag then
+						--Hit in the main cache
+					elsif cache1(index)(153) = '1' 
+						--Miss with dirty bit enabled
+					elsif cache1(index)(153) = '0'
+						--Miss with dirty bit set to 0
+					else
+						next_state <= r;
+					end if;
 	
 				when w => ;
 			
