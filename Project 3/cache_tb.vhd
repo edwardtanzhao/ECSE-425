@@ -116,7 +116,41 @@ test_process : process
 begin
 
 -- put your tests here
+	-- INVALID  - WRITE MISS CLEAN and  VALID - READ HIT (CLEAN/DIRTY)  
+	s_addr <= "000000000000000000101010101010101";                        
+	s_write <= '1';                                                      
+	s_writedata <= x"00010000";                                          
+	wait until rising_edge(s_waitrequest);                               
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	assert s_readdata = x"00010000" report "failed first write or read" severity error;
+	s_read <= '0';                                                       
+	s_write <= '0';                                                      
 	
+	wait for clk_period;
+	
+	-- INVALID - READ CLEAN MISS
+	s_addr <= "000000000000000000101010101010100";                        
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_read <= '0';                                                       
+	s_write <= '0';     
+	
+	wait for clk_period;
+
+	-- VALID  READ CLEAN MISS 
+	s_addr <= "00000000000000000000000000000000";	
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_addr <= "00000000000000000000000010000000";	
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_read <= '0';                                                       
+	s_write <= '0';
 end process;
 	
 end;
