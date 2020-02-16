@@ -222,11 +222,11 @@ begin
 	
 	-- valid write miss dirty
 	WAIT FOR clk_period;
-	s_addr <= "11111100000000000000000000000000";
+	s_addr <= x"00010D01";
 	s_write <= '1';
 	s_writedata <= x"04030201";
 	wait until rising_edge(s_waitrequest);
-	s_addr <= "00000000000000000000000100000000";
+	s_addr <= x"00010F01";
 	s_write <= '1';
 	s_writedata <= x"000000BA"; 	
 	wait until rising_edge(s_waitrequest);
