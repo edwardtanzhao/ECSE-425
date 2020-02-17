@@ -9,7 +9,7 @@ architecture behavior of cache_tb is
 
 component cache is
 generic(
-    ram_size : INTEGER := 32768;
+    ram_size : INTEGER := 32768
 );
 port(
     clock : in std_logic;
@@ -114,9 +114,131 @@ end process;
 
 test_process : process
 begin
-
--- put your tests here
+	s_read <= '0';                                                       
+	s_write <= '0';    
 	
+	-- invalid write miss clean
+	s_addr <= x"00010001";                         
+	s_write <= '1';                                                      
+	s_writedata <= x"00010000";                                          
+	wait until rising_edge(s_waitrequest);   
+
+	wait for clk_period; 
+
+	-- valid read hit clean (done several times to validate write behaviour)                          
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	assert s_readdata = x"00010000" report "failed first write or read" severity error;
+	s_read <= '0';                                                       
+	s_write <= '0';                                                      
+	
+	wait for clk_period;
+	
+	-- invalid read miss clean
+	s_addr <=  x"F001A001";                        
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_read <= '0';                                                       
+	s_write <= '0';     
+	
+	wait for clk_period;
+
+	-- valid read miss clean 
+	s_addr <=  x"0001B001";	
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_addr <=  x"0001B001";	
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_read <= '0';                                                       
+	s_write <= '0';
+
+	wait for clk_period;
+
+	-- valid write hit clean 
+	s_addr <= x"0001D001";	
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_write <= '1';
+	s_read <= '0';
+	s_writedata <= x"00000003";
+	wait until rising_edge(s_waitrequest);                               
+	s_write <= '0';
+	s_read <= '0';
+	wait for clk_period;
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	assert s_readdata = x"00000003" report "failed valid write clean hit or read" severity error;
+	s_read <= '0';                                                       
+	s_write <= '0';
+
+	wait for clk_period;
+		
+	--valid write miss clean
+	s_addr <= x"00010D01";		
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	s_addr <= x"00010E01";	
+	s_write <= '1';
+	s_read <= '0';
+	s_writedata <= x"0000000D";
+	wait until rising_edge(s_waitrequest);                               
+	s_write <= '0';
+	s_read <= '0';
+	wait for clk_period;
+	s_read <= '1';                                                       
+	s_write <= '0';                                                      
+	wait until rising_edge(s_waitrequest);                               
+	assert s_readdata = x"0000000D" report "failed valid write clean hit or read" severity error;
+	s_read <= '0';                                                       
+	s_write <= '0';
+	
+	wait for clk_period;
+	
+	-- valid write hit dirty 
+	s_addr <= x"00010D01";	
+	s_write <= '1';
+	s_read <= '0';
+	s_writedata <= x"00000001";
+	wait until rising_edge(s_waitrequest);                               
+	s_addr <= x"00010D01";	
+	s_write <='0';
+	wait for clk_period;
+	s_write <= '1';
+	s_read <= '0';
+	s_writedata <= x"00000002";
+	wait until rising_edge(s_waitrequest);                               
+	s_write <= '0';
+	s_read <= '0';
+	
+	wait for clk_period;
+	
+	-- valid write miss dirty
+	WAIT FOR clk_period;
+	s_addr <= x"00010D01";
+	s_write <= '1';
+	s_writedata <= x"04030201";
+	wait until rising_edge(s_waitrequest);
+	s_addr <= x"00010F01";
+	s_write <= '1';
+	s_writedata <= x"000000BA"; 	
+	wait until rising_edge(s_waitrequest);
+	s_read <= '1';
+	s_write <= '0';
+	wait until rising_edge(s_waitrequest);
+	assert s_readdata = x"000000BA" report "failed to write dirty miss" severity error;
+	s_read <= '0';
+	s_write <= '0';
+
+	wait;
+
 end process;
 	
 end;
