@@ -123,8 +123,6 @@ begin
 	s_writedata <= x"00010000";                                          
 	wait until rising_edge(s_waitrequest);   
 
-	wait for clk_period; 
-
 	-- valid read hit clean (done several times to validate write behaviour)                          
 	s_read <= '1';                                                       
 	s_write <= '0';                                                      
